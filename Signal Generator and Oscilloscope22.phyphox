@@ -1,0 +1,144 @@
+<phyphox xmlns="https://phyphox.org/xml" version="1.18">
+  <title>Signal Generator and Oscilloscope</title>
+  <category>Own Experiments</category>
+  <description>Signal Generator:
+Output a sine signal from the spreaker.
+
+Oscilloscope:
+Read the microphone imput.
+
+When connected to a headset jack with open leads, this can be used to test electric circuits.
+  </description>
+  <data-containers>
+    <container size="4800">recording</container>
+    <container size="4800">recording_raw</container>
+    <container size="480">recording_raw21</container>
+    <container size="48">recording_raw31</container>
+    <container>rate</container>
+    <container>tmax</container>
+    <container size="0">tmax21</container>
+    <container size="4800">time</container>
+    <container size="0">time21</container>
+    <container size="0">time31</container>
+    <container size="0">f_out</container>
+    <container>max_peak</container>
+    <container>min_peak</container>
+    <container>peak_to_peak</container>
+    <container>amp_in</container>
+    <container>first_value</container>
+    <container>first_value_norm</container>
+    <container>sine_phaseshift</container>
+  </data-containers>
+  <input>
+    <audio>
+      <output component="out">recording</output>
+      <output component="rate">rate</output>
+    </audio>
+  </input>
+  <output>
+    <audio>
+      <tone>
+        <input parameter="amplitude" type="value">1</input>
+        <input parameter="frequency">f_out</input>
+      </tone>
+    </audio>
+  </output>
+  <analysis sleep="0.1">
+    <append>
+      <input keep="true">recording</input>
+      <output>recording_raw</output>
+    </append>
+    <divide>
+      <input type="value">4800000</input>
+      <input keep="true">rate</input>
+      <output>tmax</output>
+    </divide>
+    <ramp>
+      <input as="start" type="value">0</input>
+      <input as="stop" keep="true">tmax</input>
+      <output>time</output>
+    </ramp>
+    <rangefilter>
+      <input as="in" keep="true">time</input>
+      <input as="min" type="value">0</input>
+      <input as="max" type="value">10</input>
+      <input as="in" keep="true">recording_raw</input>
+      <output as="out">time21</output>
+      <output as="out">recording_raw21</output>
+    </rangefilter>
+    <rangefilter>
+      <input as="in" keep="true">time</input>
+      <input as="min" type="value">0</input>
+      <input as="max" type="value">1</input>
+      <input as="in" keep="true">recording_raw</input>
+      <output as="out">time31</output>
+      <output as="out">recording_raw31</output>
+    </rangefilter>
+    <max>
+      <input as="y" keep="true">recording_raw</input>
+      <output as="max">max_peak</output>
+    </max>
+    <min>
+      <input as="y" keep="true">recording_raw</input>
+      <output as="min">min_peak</output>
+    </min>
+    <subtract>
+      <input>max_peak</input>
+      <input>min_peak</input>
+      <output>peak_to_peak</output>
+    </subtract>
+    <divide>
+      <input>peak_to_peak</input>
+      <input type="value">2</input>
+      <output>amp_in</output>
+    </divide>
+    <first>
+      <input as="value" keep="true">recording_raw</input>
+      <output as="first">first_value</output>
+    </first>
+    <divide>
+      <input keep="true">first_value</input>
+      <input keep="true">amp_in</input>
+      <output>first_value_norm</output>
+    </divide>
+    <asin deg="true">
+      <input as="value" keep="true">first_value_norm</input>
+      <output>sine_phaseshift</output>
+    </asin>
+  </analysis>
+  <views>
+    <view label="Signal Generator">
+      <edit default="500" label="Frequency / Hz = ">
+        <output>f_out</output>
+      </edit>
+      <info label="Change Amplitude with volume control buttons."></info>
+    </view>
+    <view label="Oscilloscope">
+      <graph label="100 ms" labelX="[[quantity_short_time]]" labelY="Amplitude" unitX="[[unit_short_milli_second]]" unitY="[[unit_short_arbitrary_unit]]">
+        <input axis="x">time</input>
+        <input axis="y">recording_raw</input>
+      </graph>
+      <graph label="10 ms" labelX="[[quantity_short_time]]" labelY="Amplitude" unitX="[[unit_short_milli_second]]" unitY="[[unit_short_arbitrary_unit]]">
+        <input axis="x">time21</input>
+        <input axis="y">recording_raw21</input>
+      </graph>
+      <graph label="1 ms" labelX="[[quantity_short_time]]" labelY="Amplitude" unitX="[[unit_short_milli_second]]" unitY="[[unit_short_arbitrary_unit]]">
+        <input axis="x">time31</input>
+        <input axis="y">recording_raw31</input>
+      </graph>
+      <value precision="3" label="Amplitude / a.u. = ">
+        <input>amp_in</input>
+      </value>
+      <value precision="3" label="Sine phaseshift / ° = ">
+        <input>sine_phaseshift</input>
+      </value>
+      <info label="Phaseshift determined by first value of the curve. If the slope at this point is negative, the output value needs to be substracted from 180° or -180°."></info>
+    </view>
+  </views>
+  <export>
+    <set name="Raw data">
+      <data name="Time (ms)">time</data>
+      <data name="Recording (a.u.)">recording_raw</data>
+    </set>
+  </export>
+</phyphox>
